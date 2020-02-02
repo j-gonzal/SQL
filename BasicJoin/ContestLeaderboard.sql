@@ -1,11 +1,27 @@
-SELECT Hackers.Hacker_ID, Hackers.Name, SUM(smalltab.hscores) as sumscores
-FROM Hackers
+SELECT
+    t2.hid,
+    h.name,
+    t2.score
+FROM
+    (SELECT
+        SUM(t1.maxscore) AS score,
+        t1.hid as hid
+    FROM
+        (SELECT
+            MAX(score) AS maxscore,
+            challenge_id AS cid,
+            hacker_id AS hid
+        FROM
+            submissions
+        GROUP BY
+            hacker_id,
+            challenge_id) t1
+    GROUP BY
+        hid) t2
     JOIN
-    (SELECT Submissions.Hacker_ID, MAX(Submissions.score) as hscores
-    from Submissions
-    GROUP BY Submissions.challenge_id, Submissions.hacker_id 
-    ) as smalltab
-    on Hackers.Hacker_ID = smalltab.Hacker_ID
-WHERE smalltab.hscores > 0
-GROUP BY Hackers.Hacker_ID
-ORDER BY sumscores DESC, hackers.hacker_id, hackers.name;
+    hackers h
+    ON h.hacker_id = t2.hid
+HAVING t2.score > 0
+ORDER BY
+    t2.score DESC,
+    t2.hid ASC;
